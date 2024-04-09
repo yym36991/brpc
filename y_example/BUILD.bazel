@@ -1,0 +1,155 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_proto_library")
+
+COPTS = [
+    "-D__STDC_FORMAT_MACROS",
+    "-DBTHREAD_USE_FAST_PTHREAD_MUTEX",
+    "-D__const__=__unused__",
+    "-D_GNU_SOURCE",
+    "-DUSE_SYMBOLIZE",
+    "-DNO_TCMALLOC",
+    "-D__STDC_LIMIT_MACROS",
+    "-D__STDC_CONSTANT_MACROS",
+    "-fPIC",
+    "-Wno-unused-parameter",
+    "-fno-omit-frame-pointer",
+    "-DGFLAGS_NS=google",
+] + select({
+    "//bazel/config:brpc_with_glog": ["-DBRPC_WITH_GLOG=1"],
+    "//conditions:default": ["-DBRPC_WITH_GLOG=0"],
+}) + select({
+    "//bazel/config:brpc_with_rdma": ["-DBRPC_WITH_RDMA=1"],
+    "//conditions:default": [""],
+})
+
+proto_library(
+    name = "echo_c++_proto",
+    srcs = [
+        "echo_c++/echo.proto",
+    ],
+)
+
+cc_proto_library(
+    name = "cc_echo_c++_proto",
+    deps = [
+        ":echo_c++_proto",
+    ],
+)
+
+cc_binary(
+    name = "echo_c++_server",
+    srcs = [
+        "echo_c++/server.cpp",
+    ],
+    copts = COPTS,
+    includes = [
+        "echo_c++",
+    ],
+    deps = [
+        ":cc_echo_c++_proto",
+        "//:brpc",
+    ],
+)
+
+cc_binary(
+    name = "echo_c++_client",
+    srcs = [
+        "echo_c++/client.cpp",
+    ],
+    copts = COPTS,
+    includes = [
+        "echo_c++",
+    ],
+    deps = [
+        ":cc_echo_c++_proto",
+        "//:brpc",
+    ],
+)
+
+proto_library(
+    name = "phone_proto",
+    srcs = [
+        "phone/phone.proto",
+    ],
+)
+
+cc_proto_library(
+    name = "cc_phone_proto",
+    deps = [
+        ":phone_proto",
+    ],
+)
+
+cc_binary(
+    name = "phone_server",
+    srcs = [
+        "phone/server.cpp",
+    ],
+    includes = [
+       "phone",
+    ],
+    deps = [
+        ":cc_phone_proto",
+        "@com_github_brpc_brpc//:brpc",
+    ],
+    copts = COPTS,
+)
+
+cc_binary(
+    name = "phone_client",
+    srcs = [
+        "phone/client.cpp",
+    ],
+    includes = [
+        "phone",
+    ],
+    deps = [
+        ":cc_phone_proto",
+        #"@com_github_brpc_brpc//:brpc",
+        "//:brpc",
+    ],
+    copts = COPTS,
+)
+
+proto_library(
+    name = "proto_phone",
+    srcs = [
+        "multi_threaded_phone/phone.proto",
+    ],
+)
+cc_proto_library(
+    name = "cc_proto_phone",
+    deps = [
+        ":proto_phone",
+    ]
+)
+cc_binary(
+    name = "multi_phone_server",
+    srcs = [
+        "multi_threaded_phone/server.cpp",
+    ],
+    includes = [
+        "multi_threaded_phone",
+    ],
+    deps = [
+        ":cc_proto_phone",
+        "@com_github_brpc_brpc//:brpc",
+    ],
+    copts = COPTS,
+)
+
+cc_binary(
+    name = "multi_phone_client",
+    srcs = [
+        "multi_threaded_phone/client.cpp",
+    ],
+    includes = [
+        "multi_threaded_phone",
+    ],
+    deps = [
+        ":cc_proto_phone",
+        #"@com_github_brpc_brpc//:brpc",
+        "//:brpc",
+    ],
+    copts = COPTS,
+)

@@ -1,0 +1,16 @@
+syntax="proto2";
+package phonepackage;
+
+option cc_generic_services = true;
+
+message PhoneRequest {
+      required string first_name = 1;
+};
+
+message PhoneResponse {
+      required string phone_number = 1;
+};
+
+service PhoneService {
+      rpc Phone(PhoneRequest) returns (PhoneResponse);
+};
